@@ -1,5 +1,10 @@
+# hidden files everywhere!
 .vscode
 .env
+.ipynb_checkpoints
 
-**/*_volume
-**/.ipynb_checkpoints
+# dirs
+**/data
+
+# mounted volumes
+*_volume
