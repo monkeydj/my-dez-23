@@ -6,40 +6,39 @@ import os
 
 from time import time
 from sqlalchemy import create_engine
-import pandas as pd
+import pyarrow.parquet as pq
 
 
 def main(params):
     conn = params.conn  # ! must be a full connection string
     table_name = params.table_name
-    csv_url = params.csv_url
-    csv_file = f'{os.getcwd()}/data/output.csv'
+    data_url = params.data_url
+    data_output_file = f'{os.getcwd()}/data/output.parquet'
 
-    # download file on MacOS
-    os.system(f"curl {csv_url} -o {csv_file}")
+    t_start = time()
+
+    # * download directly from https://www.nyc.gov/site/tlc/about/tlc-trip-record-data.page
+    os.system(f"curl --progress-bar {data_url} -o {data_output_file}")
+
+    t_end = time()
+
+    print('Dowloaded data in %.3f secs' % (t_end - t_start))
 
     engine = create_engine(conn)
     engine.connect()
 
-    df_iter = pd.read_csv(csv_file, iterator=True, chunksize=10e5)
-    df = next(df_iter)
-    df.tpep_pickup_datetime = pd.to_datetime(df.tpep_pickup_datetime)
-    df.tpep_dropoff_datetime = pd.to_datetime(df.tpep_dropoff_datetime)
-    # this will create the table
-    df.head(n=0).to_sql(name=table_name, con=engine, if_exists='replace')
+    data_parquet = pq.ParquetFile(data_output_file)
+    data_iter = data_parquet.iter_batches(batch_size=1e5)
 
-    while True:
+    for data_batch in data_iter:
         t_start = time()
 
-        df = next(df_iter)
-        df.tpep_pickup_datetime = pd.to_datetime(df.tpep_pickup_datetime)
-        df.tpep_dropoff_datetime = pd.to_datetime(df.tpep_dropoff_datetime)
-
+        df = data_batch.to_pandas()
         df.to_sql(name=table_name, con=engine, if_exists='append')
 
         t_end = time()
 
-        print('inserted another chunk took %.3f secs' % (t_end - t_start))
+        print('Inserted data batch in %.3f secs' % (t_end - t_start))
 
 
 if __name__ == '__main__':
@@ -49,7 +48,7 @@ if __name__ == '__main__':
         '--conn', help='connection string to Postgres instance')
     parser.add_argument(
         '--table_name', help='table name to be imported on Postgres')
-    parser.add_argument('--csv_url', help='url of CSV file')
+    parser.add_argument('--data_url', help='url of data file')
 
     args = parser.parse_args()
     main(args)
