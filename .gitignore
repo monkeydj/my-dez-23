@@ -3,6 +3,9 @@
 .env
 .ipynb_checkpoints
 
+# ignored extension
+*.csv
+
 # dirs
 **/data
 
