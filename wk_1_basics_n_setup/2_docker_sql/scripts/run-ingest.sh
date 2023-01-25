@@ -6,5 +6,5 @@ source $(dirname $0)/.env
 # echo $DATA_URL
 
 # run dockerize script with loaded env
-docker run -it --rm --network=pg-network dez23/taxi_ingest:1.0.0 \
-  --conn=$PG_CONN_STRING --table_name=$DATA_TABLE_NAME --data_url=$DATA_URL
+docker run -it --rm --network=pg-network dez23/taxi_ingest:csv-test \
+  --conn=$PG_CONN_STRING --table_name=$DATA_TABLE_NAME --csv_url=$DATA_URL
