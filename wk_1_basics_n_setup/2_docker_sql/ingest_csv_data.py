@@ -7,12 +7,22 @@ import os
 from time import time
 from sqlalchemy import create_engine
 import pandas as pd
+import numpy as np
+from math import ceil
+
+# Special thanks to super helpful support from @iobruno
+# https://datatalks-club.slack.com/archives/C01FABYF2RG/p1674536469497729?thread_ts=1674534733.532899&cid=C01FABYF2RG
+
+
+def split_df_in_chunks_with(df: pd.DataFrame, max_chunk_size: int = 100000):
+    chunks_qty = ceil(len(df) / max_chunk_size)
+    return np.array_split(df, chunks_qty), chunks_qty
 
 
 def main(params):
-    conn = params.conn  # ! must be a full connection string
+    conn = params.conn
     table_name = params.table_name
-    csv_url = params.csv_url
+    csv_url = params.csv_url  # should be a csv.gz file
     csv_file = f'{os.getcwd()}/data/output.csv.gz'
 
     # download file on MacOS
@@ -21,26 +31,16 @@ def main(params):
     engine = create_engine(conn)
     engine.connect()
 
-    df_iter = pd.read_csv(csv_file,
-                          iterator=True, chunksize=1e5)
-    df = next(df_iter)
-    df.lpep_pickup_datetime = pd.to_datetime(df.lpep_pickup_datetime)
-    df.lpep_dropoff_datetime = pd.to_datetime(df.lpep_dropoff_datetime)
-    # this will create the table
-    df.head(n=0).to_sql(name=table_name, con=engine, if_exists='replace')
+    df = pd.read_csv(csv_file, engine='pyarrow')
+    chunks, qty = split_df_in_chunks_with(df)
 
-    while True:
+    for i, df in enumerate(chunks):
         t_start = time()
-
-        df = next(df_iter)
-        df.lpep_pickup_datetime = pd.to_datetime(df.lpep_pickup_datetime)
-        df.lpep_dropoff_datetime = pd.to_datetime(df.lpep_dropoff_datetime)
-
         df.to_sql(name=table_name, con=engine, if_exists='append')
-
         t_end = time()
 
-        print('inserted another chunk took %.3f secs' % (t_end - t_start))
+        print(f'inserted chunk #{i+1}/{qty} took %.3f secs' %
+              (t_end - t_start))
 
 
 if __name__ == '__main__':
