@@ -24,6 +24,8 @@ def main(conn, table_name, csv_url):
     engine = create_engine(conn)
     engine.connect()
 
+    print(f'downloading data from {csv_url}...')
+
     df_raw = pd.read_csv(csv_url, engine='pyarrow')
     chunks, qty = split_df_in_chunks_with(df_raw)
 
@@ -47,4 +49,4 @@ if __name__ == '__main__':
     parser.add_argument('--csv_url', help='url of CSV file')
 
     args = parser.parse_args()
-    main(**args)
+    main(conn=args.conn, table_name=args.table_name, csv_url=args.csv_url)
