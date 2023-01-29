@@ -26,6 +26,17 @@ def extract_data(csv_url):
 
 
 @task(log_prints=True)
+def transform_data(df):
+
+    print(f"pre: missing passenger count: {df['passenger_count'].isin([0]).sum()}")
+
+    df = df[df['passenger_count'] != 0]
+    print(f"post: missing passenger count: {df['passenger_count'].isin([0]).sum()}")
+
+    return df
+
+
+@task(log_prints=True)
 def load_data(conn, table_name, df):
 
     engine = create_engine(conn)
@@ -41,14 +52,23 @@ def load_data(conn, table_name, df):
         print(f'inserted chunk #{i+1}/{qty} in %.3f secs' % (t_end - t_start))
 
 
+@flow(name="Subflow", log_prints=True)
+def log_subflow(table_name: str):
+    print(f"Logging Subflow for: {table_name}")
+
+
 @flow(name='Ingest Green trips')
 def main_flow(table_name):
     conn = "postgresql://root:root@localhost:5432/ny_taxi"
     csv_url = "https://github.com/DataTalksClub/nyc-tlc-data/releases/download/green/green_tripdata_2019-01.csv.gz"
 
+    log_subflow(table_name=table_name)
+
     data_raw = extract_data(csv_url=csv_url)
-    load_data(conn=conn, table_name=table_name, df=data_raw)
+    data_stg = transform_data(data_raw)
+
+    load_data(conn=conn, table_name=table_name, df=data_stg)
 
 
 if __name__ == '__main__':
-    main_flow('test_flow_ingest_green_trips')
+    main_flow('test_flow_ingest_green_trips_2')
