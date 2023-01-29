@@ -4,10 +4,9 @@
 import pandas as pd
 import numpy as np
 
-from time import time
-from sqlalchemy import create_engine
 from math import ceil
 from prefect import flow, task
+from prefect_sqlalchemy import SqlAlchemyConnector
 
 
 # Special thanks to super helpful support from @iobruno
@@ -37,19 +36,13 @@ def transform_data(df):
 
 
 @task(log_prints=True)
-def load_data(conn, table_name, df):
+def load_data(table_name, df):
 
-    engine = create_engine(conn)
-    engine.connect()
-    chunks, qty = split_df_in_chunks_with(df)
+    block_conn = SqlAlchemyConnector.load("dez-23-ny-taxi")
 
-    for i, df_chunk in enumerate(chunks):
-        t_start = time()
-
-        df_chunk.to_sql(name=table_name, con=engine, if_exists='append')
-        t_end = time()
-
-        print(f'inserted chunk #{i+1}/{qty} in %.3f secs' % (t_end - t_start))
+    with block_conn.get_connection(begin=False) as engine:
+        df.head(n=0).to_sql(name=table_name, con=engine, if_exists='replace')
+        df.to_sql(name=table_name, con=engine, if_exists='append')
 
 
 @flow(name="Subflow", log_prints=True)
@@ -59,7 +52,6 @@ def log_subflow(table_name: str):
 
 @flow(name='Ingest Green trips')
 def main_flow(table_name):
-    conn = "postgresql://root:root@localhost:5432/ny_taxi"
     csv_url = "https://github.com/DataTalksClub/nyc-tlc-data/releases/download/green/green_tripdata_2019-01.csv.gz"
 
     log_subflow(table_name=table_name)
@@ -67,8 +59,8 @@ def main_flow(table_name):
     data_raw = extract_data(csv_url=csv_url)
     data_stg = transform_data(data_raw)
 
-    load_data(conn=conn, table_name=table_name, df=data_stg)
+    load_data(table_name=table_name, df=data_stg)
 
 
 if __name__ == '__main__':
-    main_flow('test_flow_ingest_green_trips_2')
+    main_flow('test_flow_blk_ingest_green_trips')
