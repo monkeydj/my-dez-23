@@ -10,13 +10,30 @@ from random import randint
 
 @task(retries=3, log_prints=True)
 def fetch(data_url: str) -> pd.DataFrame:
-    """ Fetch taxi data from url into Pandas dataframe """
+    """ Fetch taxi data from url into Pandas dataframe. """
 
     # pseudo failure
     if randint(0, 1) > 0:
         raise Exception
+
     print(f"Loading data from {data_url}...")
     df = pd.read_csv(data_url)
+
+    return df
+
+
+@task(log_prints=True)
+def clean(df: pd.DataFrame) -> pd.DataFrame:
+    """ Fix dtype at column(6) and (maybe) other issues. """
+
+    # on yellow taxi data
+    df['tpep_pickup_datetime'] = pd.to_datetime(df['tpep_pickup_datetime'])
+    df['tpep_dropoff_datetime'] = pd.to_datetime(df['tpep_dropoff_datetime'])
+
+    print(df.head(2))
+    print(f"columns: {df.columns}")
+    print(f"rows: {len(df)}")
+
     return df
 
 
@@ -31,6 +48,7 @@ def etl_web_to_gcs() -> None:
     dataset_url = f"https://github.com/DataTalksClub/nyc-tlc-data/releases/download/{color}/{dataset_file}.csv.gz"
 
     df = fetch(dataset_url)
+    df_clean = clean(df)
 
 
 if __name__ == '__main__':
