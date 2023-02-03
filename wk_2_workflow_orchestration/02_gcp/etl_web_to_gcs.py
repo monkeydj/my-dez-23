@@ -37,6 +37,29 @@ def clean(df: pd.DataFrame) -> pd.DataFrame:
     return df
 
 
+@task(log_prints=True)
+def write_local(df: pd.DataFrame, color: str, data_file: str) -> Path:
+    """ Write dataframe as parquet file. """
+
+    file_path = Path(f"data/{color}/{data_file}.parquet")
+    file_path.parent.mkdir(parents=True, exist_ok=True)
+
+    print(f"Writing local parquet: {file_path}...")
+    df.to_parquet(file_path, compression='gzip')
+
+    return file_path
+
+
+@task()
+def write_gcs(path: Path) -> None:
+    """ Upload parquet file to GCS. """
+
+    gcs_block = GcsBucket.load("dez-prefect-test")
+    gcs_block.upload_from_path(from_path=path, to_path=path)
+
+    return
+
+
 @flow()
 def etl_web_to_gcs() -> None:
     """ Main ETL function. """
@@ -49,6 +72,9 @@ def etl_web_to_gcs() -> None:
 
     df = fetch(dataset_url)
     df_clean = clean(df)
+
+    path = write_local(df_clean, color, dataset_file)
+    write_gcs(path=path)
 
 
 if __name__ == '__main__':
