@@ -21,6 +21,34 @@ def extract_from_gcs(color: str, year: int, month: int) -> Path:
     return local_path / gcs_path
 
 
+@task()
+def transform(path: Path) -> pd.DataFrame:
+    """Data cleaning example"""
+    df = pd.read_parquet(path)
+
+    print(f"pre: missing passenger count: {df['passenger_count'].isna().sum()}")
+    df["passenger_count"].fillna(0, inplace=True)
+    print(f"post: missing passenger count: {df['passenger_count'].isna().sum()}")
+
+    return df
+
+
+@task()
+def write_bq(df: pd.DataFrame) -> None:
+    """Write DataFrame to BiqQuery"""
+
+    gcp_credentials_block = GcpCredentials.load("dez-prefect-gcp")
+    gcp_sa_creds = gcp_credentials_block.get_credentials_from_service_account()
+
+    df.to_gbq(
+        destination_table="dez.rides",
+        project_id="de-zoomcamp-23-375203",
+        credentials=gcp_sa_creds,
+        chunksize=500_000,
+        if_exists="append",
+    )
+
+
 @flow()
 def etl_gcs_to_bq() -> None:
     """ Main ETL function. """
@@ -29,6 +57,8 @@ def etl_gcs_to_bq() -> None:
     year, month = (2021, 1)
 
     path = extract_from_gcs(color, year, month)
+    df = transform(path=path)
+    write_bq(df=df)
 
 
 if __name__ == '__main__':
