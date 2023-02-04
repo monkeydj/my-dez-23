@@ -29,7 +29,7 @@ def clean(df: pd.DataFrame) -> pd.DataFrame:
 
     # generic solution to all datetime fields
     for col in df.columns:
-        if col.endswith('_datetime'):
+        if col.endswith("_datetime"):
             df[col] = pd.to_datetime(df[col])
 
     print(df.head(2))
