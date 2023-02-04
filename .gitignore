@@ -8,6 +8,7 @@
 
 # dirs
 **/data
+**/__pycache__
 
 # mounted volumes
 *_volume

@@ -27,9 +27,10 @@ def fetch(data_url: str) -> pd.DataFrame:
 def clean(df: pd.DataFrame) -> pd.DataFrame:
     """Fix dtype at column(6) and (maybe) other issues."""
 
-    # on yellow taxi data
-    df["tpep_pickup_datetime"] = pd.to_datetime(df["tpep_pickup_datetime"])
-    df["tpep_dropoff_datetime"] = pd.to_datetime(df["tpep_dropoff_datetime"])
+    # generic solution to all datetime fields
+    for col in df.columns:
+        if col.endswith('_datetime'):
+            df[col] = pd.to_datetime(df[col])
 
     print(df.head(2))
     print(f"columns: {df.columns}")
