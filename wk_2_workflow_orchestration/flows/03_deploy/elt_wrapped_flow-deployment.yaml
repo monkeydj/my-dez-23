@@ -3,13 +3,25 @@
 ###
 name: Parameteriezed ETL
 description: null
-version: c4cad4324b5fce98ad994efb9c4eb72f
+version: 4f9a5fecd75288df245395637e1d09e0
 # The work queue that will handle this deployment's runs
 work_queue_name: default
 tags: []
-parameters: { "color": "yellow", "year": 2021, "months": [4, 5, 6] }
+parameters:
+  color: yellow
+  year: 2021
+  months:
+  - 4
+  - 5
+  - 6
 schedule: null
 infra_overrides: {}
+
+###
+### DO NOT EDIT BELOW THIS LINE
+###
+flow_name: elt-wrapped-flow
+manifest_path: null
 infrastructure:
   type: process
   env: {}
@@ -18,16 +30,13 @@ infrastructure:
   command: null
   stream_output: true
   working_dir: null
+  _block_document_id: 2e702143-b962-4d65-beb4-34f45a00b0d0
+  _block_document_name: anonymous-95b434d9-319f-49f5-9b82-84ef7645cb06
+  _is_anonymous: true
   block_type_slug: process
   _block_type_slug: process
-
-###
-### DO NOT EDIT BELOW THIS LINE
-###
-flow_name: elt-wrapped-flow
-manifest_path: null
 storage: null
-path: /Users/duy.ton/CodeSpace/workshop/de_zoomcamp_2023/wk_2_workflow_orchestration/03_deploy
+path: /Users/duy.ton/CodeSpace/workshop/de_zoomcamp_2023/wk_2_workflow_orchestration/flows/03_deploy
 entrypoint: etl_parameterized.py:elt_wrapped_flow
 parameter_openapi_schema:
   title: Parameters
@@ -46,8 +55,8 @@ parameter_openapi_schema:
     months:
       title: months
       default:
-        - 1
-        - 2
+      - 1
+      - 2
       position: 2
       type: array
       items:
