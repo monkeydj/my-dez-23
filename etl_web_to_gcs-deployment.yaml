@@ -1,0 +1,69 @@
+###
+### A complete description of a Prefect Deployment for flow 'etl-web-to-gcs'
+###
+name: etl_github_hw
+description: |-
+  at root of repo, execute
+  $ prefect deployment build -sb github/dez-github wk_2_workflow_orchestration/flows/02_gcp/etl_web_to_gcs.py:etl_web_to_gcs -n etl_github_hw
+version: 41d46fc25564b237a8cd49c75471dc93
+# The work queue that will handle this deployment's runs
+work_queue_name: default
+tags:
+- homework
+parameters:
+  color: green
+  year: 2020
+  month: 11
+schedule: null
+infra_overrides: {}
+
+###
+### DO NOT EDIT BELOW THIS LINE
+###
+flow_name: etl-web-to-gcs
+manifest_path: null
+infrastructure:
+  type: process
+  env: {}
+  labels: {}
+  name: null
+  command: null
+  stream_output: true
+  working_dir: null
+  _block_document_id: 07107e41-8cd9-4d8f-a113-ada9a499b42b
+  _block_document_name: anonymous-14c967c5-1897-4298-a8e4-40d0c2b54673
+  _is_anonymous: true
+  block_type_slug: process
+  _block_type_slug: process
+storage:
+  repository: https://github.com/monkeydj/my-dez-23.git
+  reference: null
+  access_token: null
+  _block_document_id: b1c08e91-ecc7-4371-b820-0e2d53be8f50
+  _block_document_name: dez-github
+  _is_anonymous: false
+  block_type_slug: github
+  _block_type_slug: github
+path: ''
+entrypoint: wk_2_workflow_orchestration/flows/02_gcp/etl_web_to_gcs.py:etl_web_to_gcs
+parameter_openapi_schema:
+  title: Parameters
+  type: object
+  properties:
+    color:
+      title: color
+      default: yellow
+      position: 0
+      type: string
+    year:
+      title: year
+      default: 2021
+      position: 1
+      type: integer
+    month:
+      title: month
+      default: 1
+      position: 2
+      type: integer
+  required: null
+  definitions: null
