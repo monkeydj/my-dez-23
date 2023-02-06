@@ -10,7 +10,7 @@ from random import randint
 
 @task(retries=3, log_prints=True)
 def fetch(data_url: str) -> pd.DataFrame:
-    """ Fetch taxi data from url into Pandas dataframe. """
+    """Fetch taxi data from url into Pandas dataframe."""
 
     # pseudo failure
     if randint(0, 1) > 0:
@@ -24,11 +24,12 @@ def fetch(data_url: str) -> pd.DataFrame:
 
 @task(log_prints=True)
 def clean(df: pd.DataFrame) -> pd.DataFrame:
-    """ Fix dtype at column(6) and (maybe) other issues. """
+    """Fix dtype at column(6) and (maybe) other issues."""
 
-    # on yellow taxi data
-    df['tpep_pickup_datetime'] = pd.to_datetime(df['tpep_pickup_datetime'])
-    df['tpep_dropoff_datetime'] = pd.to_datetime(df['tpep_dropoff_datetime'])
+    # generic solution to all datetime fields
+    for col in df.columns:
+        if col.endswith("_datetime"):
+            df[col] = pd.to_datetime(df[col])
 
     print(df.head(2))
     print(f"columns: {df.columns}")
@@ -39,20 +40,20 @@ def clean(df: pd.DataFrame) -> pd.DataFrame:
 
 @task(log_prints=True)
 def write_local(df: pd.DataFrame, color: str, data_file: str) -> Path:
-    """ Write dataframe as parquet file. """
+    """Write dataframe as parquet file."""
 
     file_path = Path(f"data/{color}/{data_file}.parquet")
     file_path.parent.mkdir(parents=True, exist_ok=True)
 
     print(f"Writing local parquet: {file_path}...")
-    df.to_parquet(file_path, compression='gzip')
+    df.to_parquet(file_path, compression="gzip")
 
     return file_path
 
 
 @task()
 def write_gcs(path: Path) -> None:
-    """ Upload parquet file to GCS. """
+    """Upload parquet file to GCS."""
 
     gcs_block = GcsBucket.load("dez-prefect-test")
     gcs_block.upload_from_path(from_path=path, to_path=path)
@@ -61,11 +62,8 @@ def write_gcs(path: Path) -> None:
 
 
 @flow()
-def etl_web_to_gcs() -> None:
-    """ Main ETL function. """
-
-    color = "yellow"
-    year, month = (2021, 1)
+def etl_web_to_gcs(color: str = "yellow", year: int = 2021, month: int = 1) -> None:
+    """Main ETL function."""
 
     dataset_file = f"{color}_tripdata_{year}-{month:02}"
     dataset_url = f"https://github.com/DataTalksClub/nyc-tlc-data/releases/download/{color}/{dataset_file}.csv.gz"
@@ -77,5 +75,6 @@ def etl_web_to_gcs() -> None:
     write_gcs(path=path)
 
 
-if __name__ == '__main__':
-    etl_web_to_gcs()
+if __name__ == "__main__":
+    color, year, month = ("yellow", 2021, 1)
+    etl_web_to_gcs(color, year, month)
