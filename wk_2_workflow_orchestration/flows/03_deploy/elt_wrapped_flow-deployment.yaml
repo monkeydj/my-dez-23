@@ -55,8 +55,8 @@ parameter_openapi_schema:
     months:
       title: months
       default:
-      - 1
-      - 2
+        - 1
+        - 2
       position: 2
       type: array
       items:
