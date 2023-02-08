@@ -1,0 +1,46 @@
+###
+### A complete description of a Prefect Deployment for flow 'etl-web-to-gcs'
+###
+name: etl-github-flow-support
+description: 'Main ETL function. '
+version: cb15a48ae5b472940451d455b7728438
+# The work queue that will handle this deployment's runs
+work_queue_name: default
+tags: []
+parameters: {}
+schedule: null
+infra_overrides: {}
+infrastructure:
+  type: process
+  env: {}
+  labels: {}
+  name: null
+  command: null
+  stream_output: true
+  working_dir: null
+  block_type_slug: process
+  _block_type_slug: process
+
+###
+### DO NOT EDIT BELOW THIS LINE
+###
+flow_name: etl-web-to-gcs
+manifest_path: null
+storage:
+  repository: https://github.com/monkeydj/my-dez-23.git
+  reference: module/prefect
+  access_token: null
+  include_git_objects: false
+  _block_document_id: 3888c6ae-28aa-4e68-97bc-7983dcf6b30e
+  _block_document_name: dez-github
+  _is_anonymous: false
+  block_type_slug: github
+  _block_type_slug: github
+path: ''
+entrypoint: wk_2_workflow_orchestration/flows/02_gcp/etl_web_to_gcs.py:etl_web_to_gcs
+parameter_openapi_schema:
+  title: Parameters
+  type: object
+  properties: {}
+  required: null
+  definitions: null
