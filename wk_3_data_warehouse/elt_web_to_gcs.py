@@ -41,20 +41,20 @@ def transform(df: pd.DataFrame) -> pd.DataFrame:
 
 @task(log_prints=True)
 def write_local(df: pd.DataFrame, color: str, data_file: str) -> Path:
-    """Write dataframe as parquet file."""
+    """Write dataframe to a local file."""
 
-    file_path = Path(f"data/{color}/{data_file}.parquet")
+    file_path = Path(f"data/{color}/{data_file}.csv.gz")
     file_path.parent.mkdir(parents=True, exist_ok=True)
 
-    print(f"Writing local parquet: {file_path}...")
-    df.to_parquet(file_path, compression="gzip")
+    print(f"Writing to local file: {file_path.resolve()}...")
+    df.to_csv(file_path, compression="gzip", index=False)
 
     return file_path
 
 
 @task()
 def write_gcs(path: Path) -> None:
-    """Upload parquet file to GCS."""
+    """Upload a file to GCS."""
 
     gcs_block = GcsBucket.load("dez-prefect-test")
     gcs_block.upload_from_path(from_path=path, to_path=path)
@@ -80,16 +80,13 @@ def etl_web_to_gcs(color: str, year: int, month: int) -> int:
 
 
 @flow(log_prints=True)
-def elt_batch(
-    color: str = "yellow", year: int = 2021, months: list[int] = [1, 2]
-) -> None:
+def elt_batch(color: str = "yellow", year: int = 2021, months: list[int] = [1, 2]) -> None:
     processed_total = 0
     for month in months:
         processed_total += etl_web_to_gcs(color, year, month)
 
-    print(f'Total processed data: {processed_total}')
+    print(f"Total processed data: {processed_total}")
 
 
 if __name__ == "__main__":
-    color, year, months = ("yellow", 2021, [1, 2, 3])
-    elt_batch(color=color, year=year, months=months)
+    elt_batch(color="fhv", year=2019, months=[1])
